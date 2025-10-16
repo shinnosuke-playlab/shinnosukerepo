@@ -1,0 +1,295 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <title>縦画面シューティング</title>
+  <style>
+    html, body { height: 100%; margin: 0; padding: 0; background: #0a0a0a; touch-action: none; -webkit-user-select: none; user-select: none; }
+    #game { display: block; width: 100vw; height: 100vh; }
+    .hud { position: fixed; top: env(safe-area-inset-top, 0); left: 0; right: 0; padding: 8px 12px; color: #fff; font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; font-weight: 700; display: flex; justify-content: space-between; pointer-events: none; }
+    .overlay { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; color: #fff; font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; text-align: center; padding: 24px; }
+    .overlay.hidden { display: none; }
+    .overlay .panel { background: rgba(0,0,0,0.6); border: 1px solid rgba(255,255,255,0.15); border-radius: 12px; padding: 18px 20px; backdrop-filter: blur(4px); }
+    .overlay .title { font-size: 22px; margin-bottom: 8px; }
+    .overlay .sub { font-size: 14px; opacity: 0.9; }
+  </style>
+</head>
+<body>
+  <div class="hud"><div id="score">SCORE: 0</div><div id="status"></div></div>
+  <canvas id="game"></canvas>
+  <div id="overlay" class="overlay hidden">
+    <div class="panel">
+      <div class="title" id="overlayTitle">GAME OVER</div>
+      <div class="sub" id="overlaySub">タップでリスタート</div>
+    </div>
+  </div>
+
+  <script>
+    (function() {
+      const canvas = document.getElementById('game');
+      const ctx = canvas.getContext('2d');
+      const scoreEl = document.getElementById('score');
+      const overlay = document.getElementById('overlay');
+      const overlayTitle = document.getElementById('overlayTitle');
+      const overlaySub = document.getElementById('overlaySub');
+
+      let cssWidth = 0, cssHeight = 0, dpr = Math.max(1, Math.min(3, window.devicePixelRatio || 1));
+
+      function resize() {
+        cssWidth = Math.max(1, window.innerWidth);
+        cssHeight = Math.max(1, window.innerHeight);
+        const safeTop = Number(getComputedStyle(document.documentElement).getPropertyValue('--sat') || 0);
+        canvas.style.width = cssWidth + 'px';
+        canvas.style.height = cssHeight + 'px';
+        canvas.width = Math.floor(cssWidth * dpr);
+        canvas.height = Math.floor(cssHeight * dpr);
+        ctx.setTransform(1,0,0,1,0,0);
+        ctx.scale(dpr, dpr);
+      }
+
+      window.addEventListener('resize', resize);
+      resize();
+
+      const game = {
+        running: false,
+        over: false,
+        score: 0,
+        lastFireAt: 0,
+        fireIntervalMs: 130,
+        lastEnemyAt: 0,
+        enemyIntervalMs: 700,
+        enemies: [],
+        bullets: [],
+        player: { x: 0, y: 0, r: 16, speed: 900 },
+        target: null,
+      };
+
+      function reset() {
+        game.running = true;
+        game.over = false;
+        game.score = 0;
+        game.lastFireAt = 0;
+        game.lastEnemyAt = 0;
+        game.enemies = [];
+        game.bullets = [];
+        game.player.x = cssWidth / 2;
+        game.player.y = cssHeight * 0.82;
+        game.target = { x: game.player.x, y: game.player.y };
+        scoreEl.textContent = 'SCORE: ' + game.score;
+        overlay.classList.add('hidden');
+      }
+
+      function rand(min, max) { return Math.random() * (max - min) + min; }
+
+      function spawnEnemy() {
+        const w = 26 + Math.random() * 20;
+        const h = w;
+        const x = rand(w/2, cssWidth - w/2);
+        const y = -h;
+        const speed = 80 + Math.random() * 140;
+        game.enemies.push({ x, y, w, h, speed, hp: 1 });
+      }
+
+      function fireBullet() {
+        const bSpeed = 680;
+        const bW = 4, bH = 14;
+        game.bullets.push({ x: game.player.x, y: game.player.y - game.player.r, w: bW, h: bH, speed: bSpeed });
+      }
+
+      function rectsOverlap(ax, ay, aw, ah, bx, by, bw, bh) {
+        return ax < bx + bw && ax + aw > bx && ay < by + bh && ay + ah > by;
+      }
+
+      function circleRectCollide(cx, cy, cr, rx, ry, rw, rh) {
+        const closestX = Math.max(rx, Math.min(cx, rx + rw));
+        const closestY = Math.max(ry, Math.min(cy, ry + rh));
+        const dx = cx - closestX;
+        const dy = cy - closestY;
+        return (dx*dx + dy*dy) <= cr*cr;
+      }
+
+      let lastTime = performance.now();
+      function loop(now) {
+        const dt = Math.min(0.033, (now - lastTime) / 1000);
+        lastTime = now;
+
+        ctx.clearRect(0, 0, cssWidth, cssHeight);
+
+        // background stars
+        drawBackground(now);
+
+        if (game.running) {
+          update(dt, now);
+          draw();
+        } else {
+          draw();
+        }
+
+        requestAnimationFrame(loop);
+      }
+
+      function update(dt, now) {
+        // move player towards target instantly on tap or smoothly if target set
+        if (game.target) {
+          const dx = game.target.x - game.player.x;
+          const dy = game.target.y - game.player.y;
+          const dist = Math.hypot(dx, dy);
+          const speed = game.player.speed;
+          if (dist < speed * dt) {
+            game.player.x = game.target.x;
+            game.player.y = game.target.y;
+          } else if (dist > 0) {
+            game.player.x += (dx / dist) * speed * dt;
+            game.player.y += (dy / dist) * speed * dt;
+          }
+        }
+        game.player.x = Math.max(game.player.r, Math.min(cssWidth - game.player.r, game.player.x));
+        game.player.y = Math.max(game.player.r, Math.min(cssHeight - game.player.r, game.player.y));
+
+        // auto-fire
+        if (now - game.lastFireAt > game.fireIntervalMs) {
+          fireBullet();
+          game.lastFireAt = now;
+        }
+
+        // spawn enemies
+        if (now - game.lastEnemyAt > game.enemyIntervalMs) {
+          spawnEnemy();
+          game.lastEnemyAt = now + (Math.random() * 150 - 75);
+        }
+
+        // update bullets
+        for (let i = game.bullets.length - 1; i >= 0; i--) {
+          const b = game.bullets[i];
+          b.y -= b.speed * dt;
+          if (b.y + b.h < 0) game.bullets.splice(i, 1);
+        }
+
+        // update enemies
+        for (let i = game.enemies.length - 1; i >= 0; i--) {
+          const e = game.enemies[i];
+          e.y += e.speed * dt;
+          if (e.y - e.h > cssHeight) game.enemies.splice(i, 1);
+        }
+
+        // collisions: bullets -> enemies
+        for (let i = game.enemies.length - 1; i >= 0; i--) {
+          const e = game.enemies[i];
+          for (let j = game.bullets.length - 1; j >= 0; j--) {
+            const b = game.bullets[j];
+            if (rectsOverlap(b.x - b.w/2, b.y - b.h, b.w, b.h, e.x - e.w/2, e.y - e.h/2, e.w, e.h)) {
+              game.bullets.splice(j, 1);
+              e.hp -= 1;
+              if (e.hp <= 0) {
+                game.enemies.splice(i, 1);
+                game.score += 10;
+                scoreEl.textContent = 'SCORE: ' + game.score;
+                break;
+              }
+            }
+          }
+        }
+
+        // collisions: enemies -> player
+        for (let i = 0; i < game.enemies.length; i++) {
+          const e = game.enemies[i];
+          if (circleRectCollide(game.player.x, game.player.y, game.player.r * 0.85, e.x - e.w/2, e.y - e.h/2, e.w, e.h)) {
+            gameOver();
+            break;
+          }
+        }
+      }
+
+      function draw() {
+        // player
+        drawPlayer(game.player.x, game.player.y, game.player.r);
+
+        // bullets
+        ctx.fillStyle = '#ffd85a';
+        for (const b of game.bullets) {
+          ctx.fillRect(b.x - b.w/2, b.y - b.h, b.w, b.h);
+        }
+
+        // enemies
+        for (const e of game.enemies) {
+          drawEnemy(e.x, e.y, e.w, e.h);
+        }
+      }
+
+      function drawPlayer(x, y, r) {
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.fillStyle = '#6be3ff';
+        ctx.beginPath();
+        ctx.moveTo(0, -r);
+        ctx.lineTo(r * 0.7, r);
+        ctx.lineTo(-r * 0.7, r);
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+      }
+
+      function drawEnemy(x, y, w, h) {
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.fillStyle = '#ff6b6b';
+        ctx.fillRect(-w/2, -h/2, w, h);
+        ctx.restore();
+      }
+
+      function drawBackground(t) {
+        const n = 40;
+        ctx.save();
+        for (let i = 0; i < n; i++) {
+          const sx = (i * 97 % cssWidth);
+          const sy = (i * 53 + (t * 0.05)) % cssHeight;
+          const sz = (i % 3) + 1;
+          ctx.globalAlpha = 0.15 + (sz * 0.15);
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(sx, sy, sz, sz);
+        }
+        ctx.globalAlpha = 1;
+        ctx.restore();
+      }
+
+      function gameOver() {
+        game.running = false;
+        game.over = true;
+        overlayTitle.textContent = 'GAME OVER';
+        overlaySub.textContent = 'タップでリスタート';
+        overlay.classList.remove('hidden');
+      }
+
+      // input handling
+      function toCanvasPoint(clientX, clientY) {
+        const rect = canvas.getBoundingClientRect();
+        return {
+          x: (clientX - rect.left),
+          y: (clientY - rect.top)
+        };
+      }
+
+      function handlePoint(clientX, clientY) {
+        const p = toCanvasPoint(clientX, clientY);
+        if (game.over) {
+          reset();
+          return;
+        }
+        game.target = { x: p.x, y: p.y };
+      }
+
+      canvas.addEventListener('pointerdown', (e) => { e.preventDefault(); handlePoint(e.clientX, e.clientY); });
+      canvas.addEventListener('pointermove', (e) => { if (e.pressure > 0) { e.preventDefault(); handlePoint(e.clientX, e.clientY); } });
+      canvas.addEventListener('touchstart', (e) => { if (e.changedTouches && e.changedTouches[0]) { e.preventDefault(); handlePoint(e.changedTouches[0].clientX, e.changedTouches[0].clientY); } }, { passive: false });
+      canvas.addEventListener('touchmove', (e) => { if (e.touches && e.touches[0]) { e.preventDefault(); handlePoint(e.touches[0].clientX, e.touches[0].clientY); } }, { passive: false });
+
+      // start
+      reset();
+      requestAnimationFrame(loop);
+    })();
+  </script>
+</body>
+</html>
+
+
