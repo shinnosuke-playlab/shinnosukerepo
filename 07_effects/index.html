@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>攻撃エフェクト</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            touch-action: none;
+        }
+
+        #target {
+            width: 100px;
+            height: 100px;
+            background: #c3cc64ab;
+            border-radius: 50%;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .effect {
+            position: absolute;
+            pointer-events: none;
+            border: 2px solid #fff;
+            border-radius: 50%;
+            animation: expand 0.6s ease-out forwards;
+            opacity: 1;
+        }
+
+        @keyframes expand {
+            0% {
+                width: 0;
+                height: 0;
+                opacity: 1;
+            }
+            100% {
+                width: 100px;
+                height: 100px;
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="target"></div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const body = document.body;
+
+            function createEffect(x, y) {
+                const effect = document.createElement('div');
+                effect.className = 'effect';
+                effect.style.left = x + 'px';
+                effect.style.top = y + 'px';
+                effect.style.transform = 'translate(-50%, -50%)';
+                
+                body.appendChild(effect);
+
+                // アニメーション終了後に要素を削除
+                effect.addEventListener('animationend', () => {
+                    body.removeChild(effect);
+                });
+            }
+
+            // タッチとマウスの両方に対応
+            body.addEventListener('click', (e) => {
+                createEffect(e.clientX, e.clientY);
+            });
+
+            body.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                const touch = e.touches[0];
+                createEffect(touch.clientX, touch.clientY);
+            });
+        });
+    </script>
+</body>
+</html>

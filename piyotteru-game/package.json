@@ -1,0 +1,28 @@
+{
+  "name": "piyotteru-game",
+  "version": "1.0.0",
+  "description": "A fun game where players collect items and manage their farm.",
+  "main": "src/js/Game.js",
+  "scripts": {
+    "start": "live-server public",
+    "build": "webpack --mode production",
+    "test": "jest"
+  },
+  "keywords": [
+    "game",
+    "javascript",
+    "html5",
+    "canvas"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "dependencies": {
+    "live-server": "^1.2.1",
+    "webpack": "^5.64.4",
+    "webpack-cli": "^4.9.1",
+    "jest": "^27.0.6"
+  },
+  "devDependencies": {
+    "webpack-dev-server": "^4.6.0"
+  }
+}

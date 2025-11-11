@@ -1,0 +1,387 @@
+/* src/css/style.css
+   フルコピー: トップレベルの style.css から移行（必要なら分割）
+*/
+
+/* 全体 */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* ボディ */
+body {
+    font-family: Arial, sans-serif;
+    background: linear-gradient(to bottom, #87CEEB 0%, #87CEEB 33%, #90EE90 33%, #90EE90 100%);
+    height: 100vh;
+    overflow: hidden;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+}
+
+/* ゲームコンテナ */
+.game-container {
+    width: 100vw;
+    height: 100vh;
+    position: relative;
+}
+
+/* 上部エリア */
+.top-area {
+    height: 33vh;
+    background: linear-gradient(to bottom, #87CEEB, #98D8E8);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-direction: column;
+    color: white;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    padding: 10px;
+}
+
+/* タイトル */
+.title {
+    font-size: 2.5rem;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+/* 統計表示 */
+.stats {
+    font-size: 1.2rem;
+    text-align: center;
+}
+
+/* マイキー領域 */
+.mikey-area {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    margin-top: 10px;
+}
+
+/* マイキー */
+.mikey {
+    font-size: 3rem;
+    margin-bottom: 10px;
+    animation: angry 2s infinite;
+}
+
+/* マイキーのセリフ */
+.mikey-speech {
+    background: rgba(0,0,0,0.7);
+    color: white;
+    padding: 10px 15px;
+    border-radius: 15px;
+    font-size: 1.1rem;
+    max-width: 100%;
+    text-align: center;
+    border: 2px solid #FF0000;
+}
+
+/* HPバー */
+.hp-bar {
+    width: 200px;
+    height: 20px;
+    background: rgba(0,0,0,0.3);
+    border-radius: 10px;
+    overflow: hidden;
+    margin-top: 10px;
+}
+
+/* HPバー */
+.hp-fill {
+    height: 100%;
+    background: #00FF00;
+    transition: width 0.3s ease;
+}
+
+/* HP数値表示 */
+.hp-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.hp-text {
+    color: white;
+    font-weight: bold;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+}
+
+/* 一時停止ボタン */
+.pause-btn {
+    position: fixed;
+    top: 12px;
+    right: 140px; /* 右上の合計表示と被らないように調整 */
+    z-index: 905;
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: none;
+    background: rgba(0,0,0,0.6);
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+}
+.pause-btn:active { transform: translateY(1px); }
+
+/* ゲームオーバー */
+.game-over {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0,0,0,0.8);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    color: white;
+    font-size: 2rem;
+    z-index: 1000;
+}
+
+/* マイキーの怒り */
+@keyframes angry {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+}
+
+/* 画面シェイク */
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    10% { transform: translateX(-10px); }
+    20% { transform: translateX(10px); }
+    30% { transform: translateX(-10px); }
+    40% { transform: translateX(10px); }
+    50% { transform: translateX(-10px); }
+    60% { transform: translateX(10px); }
+    70% { transform: translateX(-10px); }
+    80% { transform: translateX(10px); }
+    90% { transform: translateX(-10px); }
+}
+
+/* 画面シェイク */
+.screen-shake {
+    animation: shake 0.5s ease-in-out;
+}
+
+/* 殴られエフェクト */
+.impact-effect {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    pointer-events: none;
+    z-index: 999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 8rem;
+    color: #FF0000;
+    text-shadow: 0 0 30px #FF0000, 0 0 60px #FF0000;
+    animation: impactAnimation 0.5s ease-out;
+}
+
+/* 殴られエフェクト */
+@keyframes impactAnimation {
+    0% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 0;
+    }
+}
+
+/* 養鶏場エリア */
+.farm-area {
+    height: 67vh;
+    background: linear-gradient(to bottom, #90EE90, #7CCD7C);
+    position: relative;
+    overflow: hidden;
+}
+
+/* 動物オブジェクト */
+.animal {
+    position: absolute;
+    cursor: pointer;
+    transition: transform 0.1s ease;
+}
+
+/* 動物オブジェクト */
+.animal:active {
+    transform: scale(0.95);
+}
+
+/* たまご */
+.egg {
+    width: 30px;
+    height: 40px;
+    background: #F5F5DC;
+    border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+    border: 2px solid #D2B48C;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+}
+
+/* ひよこ */
+.chick {
+    width: 35px;
+    height: 35px;
+    background: #FFD700;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 25px;
+}
+
+/* にわとり */
+.chicken {
+    width: 40px;
+    height: 40px;
+    background: #FFA500;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 30px;
+}
+
+/* 揺れる */
+@keyframes bounce {
+    0% { transform: translateY(0px); }
+    100% { transform: translateY(-3px); }
+}
+
+/* 進捗バー */
+.progress-bar {
+    position: absolute;
+    bottom: -5px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 80%;
+    height: 4px;
+    background: rgba(0,0,0,0.2);
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+/* 進捗バー */
+.progress-fill {
+    height: 100%;
+    background: #FF0000;
+    border-radius: 2px;
+    /* transition: width 0.3s ease; */
+    transition: none;
+}
+
+/* 進捗バー */
+.progress-fill.no-transition {
+    transition: none;
+}
+
+/* タップエフェクト */
+.tap-effect {
+    position: absolute;
+    pointer-events: none;
+    color: #FFD700;
+    font-size: 1.5rem;
+    font-weight: bold;
+    animation: tapAnimation 0.6s ease-out forwards;
+}
+
+/* タップエフェクト */
+@keyframes tapAnimation {
+    0% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+    100% {
+        opacity: 0;
+        transform: translateY(-30px) scale(1.2);
+    }
+}
+
+/* 右上の合計表示 */
+.total-top {
+    position: fixed;
+    top: 12px;
+    right: 12px;
+    background: rgba(0,0,0,0.6);
+    color: #fff;
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-weight: bold;
+    z-index: 900;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+
+/* 殴られた時の独立メッセージ */
+.hit-message {
+    position: fixed;
+    top: 20%;
+    left: 80%;
+    transform: translateX(-50%);
+    background: rgba(255, 60, 60, 0.95);
+    color: #fff;
+    padding: 14px 18px;
+    border-radius: 12px;
+    font-size: 1.25rem;
+    z-index: 1001;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.35);
+    border: 2px solid #fff0;
+    text-align: center;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+.hit-message.show {
+    opacity: 1;
+}
+
+/* ショップパネル */
+.shop-panel {
+    position: fixed;
+    top: 12px;
+    left: 12px; /* 左上に配置 */
+    transform: none;
+    width: 220px;
+    background: rgba(255,255,255,0.9);
+    color: #222;
+    padding: 10px;
+    border-radius: 8px;
+    z-index: 905;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+}
+.shop-panel h3 { margin-bottom: 8px; font-size: 1.05rem; }
+.shop-list { display: flex; flex-direction: column; gap: 6px; }
+.shop-item button {
+    width: 100%;
+    padding: 8px 10px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    background: #333;
+    color: #fff;
+}
+.shop-item button:disabled { opacity: 0.45; cursor: default; }
+
+/* 発動中のボタン */
+.shop-item button.active {
+    background: linear-gradient(90deg,#ff8a00,#ff3d00);
+    color: #fff;
+    box-shadow: 0 6px 18px rgba(255,61,0,0.28);
+    transform: translateY(-1px);
+}
+
+/* オオカミに狙われた動物の強調 */
+.wolf-target {
+    outline: 3px solid rgba(0,0,0,0.4);
+    box-shadow: 0 4px 14px rgba(0,0,0,0.25) inset, 0 6px 18px rgba(255,0,0,0.18);
+}

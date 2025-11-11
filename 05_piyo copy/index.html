@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>パズルゲーム - たまごひよこにわとり</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 10px;
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-touch-callout: none;
+        }
+
+        .game-container {
+            width: 100%;
+            max-width: 400px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .title {
+            text-align: center;
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .game-board {
+            display: grid;
+            grid-template-columns: repeat(9, 1fr);
+            grid-template-rows: repeat(9, 1fr);
+            gap: 2px;
+            background: #333;
+            padding: 2px;
+            border-radius: 10px;
+            margin: 0 auto;
+            width: 360px;
+            height: 360px;
+        }
+
+        .cell {
+            background: #fff;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+            font-size: 20px;
+        }
+
+        .cell:hover {
+            transform: scale(1.05);
+        }
+
+        .cell.dragging {
+            opacity: 0.7;
+            transform: scale(1.1);
+            z-index: 1000;
+        }
+
+        .cell.valid-drop {
+            background: #e8f5e8;
+            border: 2px solid #4caf50;
+        }
+
+        .cell.invalid-drop {
+            background: #ffe8e8;
+            border: 2px solid #f44336;
+        }
+
+        /* ブロックの種類 */
+        .egg {
+            color: #ff9800;
+        }
+
+        .chick {
+            color: #ffeb3b;
+        }
+
+        .chicken {
+            color: #ff5722;
+        }
+
+        .instructions {
+            text-align: center;
+            margin-top: 20px;
+            color: #666;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .score {
+            text-align: center;
+            margin-top: 15px;
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        @media (max-width: 480px) {
+            .game-container {
+                padding: 15px;
+            }
+            
+            .game-board {
+                width: 320px;
+                height: 320px;
+            }
+            
+            .cell {
+                font-size: 18px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1 class="title">🐣 パズルゲーム 🐔</h1>
+        
+        <div class="game-board" id="gameBoard">
+            <!-- 9x9のグリッドはJavaScriptで生成 -->
+        </div>
+        
+        <div class="score" id="score">スコア: 0</div>
+        
+        <div class="instructions">
+            ブロックをドラッグして隣のブロックと入れ替えよう！<br>
+            入れ替えると進化するよ：たまご → ひよこ → にわとり → たまご...
+        </div>
+    </div>
+
+    <script>
+        class PuzzleGame {
+            constructor() {
+                this.board = [];
+                this.selectedCell = null;
+                this.score = 0;
+                this.blockTypes = ['egg', 'chick', 'chicken'];
+                this.blockEmojis = {
+                    'egg': '🥚',
+                    'chick': '🐣',
+                    'chicken': '🐔'
+                };
+                this.evolutionOrder = ['egg', 'chick', 'chicken'];
+                
+                this.init();
+            }
+
+            init() {
+                this.createBoard();
+                this.setupEventListeners();
+                this.updateScore();
+            }
+
+            createBoard() {
+                const gameBoard = document.getElementById('gameBoard');
+                gameBoard.innerHTML = '';
+                
+                // 9x9のボードを初期化
+                for (let row = 0; row < 9; row++) {
+                    this.board[row] = [];
+                    for (let col = 0; col < 9; col++) {
+                        // ランダムにブロックタイプを選択
+                        const randomType = this.blockTypes[Math.floor(Math.random() * this.blockTypes.length)];
+                        this.board[row][col] = randomType;
+                        
+                        const cell = document.createElement('div');
+                        cell.className = `cell ${randomType}`;
+                        cell.dataset.row = row;
+                        cell.dataset.col = col;
+                        cell.textContent = this.blockEmojis[randomType];
+                        
+                        gameBoard.appendChild(cell);
+                    }
+                }
+            }
+
+            setupEventListeners() {
+                const gameBoard = document.getElementById('gameBoard');
+                
+                // タッチイベント（スマホ対応）
+                gameBoard.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    const cell = e.target.closest('.cell');
+                    if (cell) {
+                        this.handleCellSelect(cell);
+                    }
+                });
+
+                gameBoard.addEventListener('touchmove', (e) => {
+                    e.preventDefault();
+                });
+
+                gameBoard.addEventListener('touchend', (e) => {
+                    e.preventDefault();
+                    const cell = e.target.closest('.cell');
+                    if (cell && this.selectedCell) {
+                        this.handleCellDrop(cell);
+                    }
+                });
+
+                // マウスイベント（デスクトップ対応）
+                gameBoard.addEventListener('mousedown', (e) => {
+                    e.preventDefault();
+                    const cell = e.target.closest('.cell');
+                    if (cell) {
+                        this.handleCellSelect(cell);
+                    }
+                });
+
+                gameBoard.addEventListener('mouseup', (e) => {
+                    e.preventDefault();
+                    const cell = e.target.closest('.cell');
+                    if (cell && this.selectedCell) {
+                        this.handleCellDrop(cell);
+                    }
+                });
+            }
+
+            handleCellSelect(cell) {
+                // 既に選択されているセルがあれば解除
+                if (this.selectedCell) {
+                    this.selectedCell.classList.remove('dragging');
+                }
+
+                this.selectedCell = cell;
+                cell.classList.add('dragging');
+                
+                // 隣接するセルをハイライト
+                this.highlightAdjacentCells(cell);
+            }
+
+            highlightAdjacentCells(selectedCell) {
+                const row = parseInt(selectedCell.dataset.row);
+                const col = parseInt(selectedCell.dataset.col);
+                
+                // 全てのセルからハイライトを削除
+                document.querySelectorAll('.cell').forEach(cell => {
+                    cell.classList.remove('valid-drop', 'invalid-drop');
+                });
+
+                // 隣接するセルをハイライト
+                const adjacentCells = [
+                    {row: row - 1, col: col}, // 上
+                    {row: row + 1, col: col}, // 下
+                    {row: row, col: col - 1}, // 左
+                    {row: row, col: col + 1}  // 右
+                ];
+
+                adjacentCells.forEach(pos => {
+                    if (pos.row >= 0 && pos.row < 9 && pos.col >= 0 && pos.col < 9) {
+                        const cell = document.querySelector(`[data-row="${pos.row}"][data-col="${pos.col}"]`);
+                        if (cell) {
+                            cell.classList.add('valid-drop');
+                        }
+                    }
+                });
+            }
+
+            handleCellDrop(targetCell) {
+                if (!this.selectedCell) return;
+
+                const selectedRow = parseInt(this.selectedCell.dataset.row);
+                const selectedCol = parseInt(this.selectedCell.dataset.col);
+                const targetRow = parseInt(targetCell.dataset.row);
+                const targetCol = parseInt(targetCell.dataset.col);
+
+                // 隣接しているかチェック
+                const isAdjacent = Math.abs(selectedRow - targetRow) + Math.abs(selectedCol - targetCol) === 1;
+
+                if (isAdjacent) {
+                    // ブロックを入れ替え
+                    this.swapBlocks(selectedRow, selectedCol, targetRow, targetCol);
+                    
+                    // 両方のブロックを進化させる
+                    this.evolveBlock(selectedRow, selectedCol);
+                    this.evolveBlock(targetRow, targetCol);
+                    
+                    this.score += 10;
+                    this.updateScore();
+                }
+
+                // 選択を解除
+                this.clearSelection();
+            }
+
+            swapBlocks(row1, col1, row2, col2) {
+                // ボード上のデータを入れ替え
+                const temp = this.board[row1][col1];
+                this.board[row1][col1] = this.board[row2][col2];
+                this.board[row2][col2] = temp;
+
+                // 表示を更新
+                this.updateCellDisplay(row1, col1);
+                this.updateCellDisplay(row2, col2);
+            }
+
+            evolveBlock(row, col) {
+                const currentType = this.board[row][col];
+                const currentIndex = this.evolutionOrder.indexOf(currentType);
+                const nextIndex = (currentIndex + 1) % this.evolutionOrder.length;
+                const newType = this.evolutionOrder[nextIndex];
+                
+                this.board[row][col] = newType;
+                this.updateCellDisplay(row, col);
+            }
+
+            updateCellDisplay(row, col) {
+                const cell = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
+                if (cell) {
+                    const blockType = this.board[row][col];
+                    cell.className = `cell ${blockType}`;
+                    cell.textContent = this.blockEmojis[blockType];
+                }
+            }
+
+            clearSelection() {
+                if (this.selectedCell) {
+                    this.selectedCell.classList.remove('dragging');
+                    this.selectedCell = null;
+                }
+                
+                // 全てのハイライトを削除
+                document.querySelectorAll('.cell').forEach(cell => {
+                    cell.classList.remove('valid-drop', 'invalid-drop');
+                });
+            }
+
+            updateScore() {
+                document.getElementById('score').textContent = `スコア: ${this.score}`;
+            }
+        }
+
+        // ゲーム開始
+        document.addEventListener('DOMContentLoaded', () => {
+            new PuzzleGame();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ピヨってるやつ、いるー？</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- ゲームコンテナ -->
+    <div class="game-container">
+        
+        <div class="top-area">
+            <!-- タイトル -->
+            <div class="title">🐔 夜の集会 🐔</div>
+
+            <!-- 統計表示 -->
+            <div class="stats">
+                <div>たまご: <span id="egg-count">0</span> | ひよこ: <span id="chick-count">0</span> | にわとり: <span id="chicken-count">0</span></div>
+            </div>
+
+            <!-- 一時停止ボタン -->
+            <button id="pause-btn" class="pause-btn">一時停止</button>
+
+            <!-- マイキー -->
+            <div class="mikey-area">
+                <div class="mikey">😠</div>
+                <div class="mikey-speech" id="mikey-speech">この中に...</div>
+                <div class="hp-info">
+                    <div class="hp-bar">
+                        <div class="hp-fill" id="hp-fill"></div>
+                    </div>
+                    <div id="hp-text" class="hp-text">1000/1000</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 総数表示（右上） -->
+        <div id="total-top" class="total-top">総数: <span id="total-count-top">0</span></div>
+
+        <!-- ひよこがいるじゃねえか！ -->
+        <div id="hit-message" class="hit-message" style="display:none">ひよこがいるじゃねえか！</div>
+
+        <!-- 養鶏場エリア -->
+        <div class="farm-area" id="farm-area">
+        </div>
+    </div>
+
+    <!-- ゲームオーバー -->
+    <div class="game-over" id="game-over">
+        <div>💀 死... 💀</div>
+        <div style="font-size: 1.2rem; margin-top: 20px;">日和ってるやつはいらない</div>
+        <button onclick="location.reload()" style="margin-top: 20px; padding: 10px 20px; font-size: 1.2rem; background: #FF0000; color: white; border: none; border-radius: 5px; cursor: pointer;">リベンジャーズ</button>
+    </div>
+
+    <!-- スクリプト読み込み -->
+    <script src="Animal.js"></script>
+    <script src="Game.js"></script>
+
+    <!-- ゲーム開始 -->
+    <script>
+        const game = new Game();
+        window.game = game; 
+    </script>
+</body>
+</html>

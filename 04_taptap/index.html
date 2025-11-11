@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>タップゲーム</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+         body {
+             font-family: 'Arial', sans-serif;
+             background: #000000;
+             overflow: hidden;
+             margin: 0;
+             padding: 0;
+             touch-action: manipulation;
+             height: auto;
+         }
+
+         #gameContainer {
+             position: fixed;
+             top: 0;
+             left: 0;
+             width: 100vw;
+             height: calc(var(--vh, 1vh) * 100);
+             overflow: hidden;
+         }
+
+        #ui {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        #score {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: white;
+            font-size: 24px;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+
+
+         #timerBar {
+             position: absolute;
+             top: 20px;
+             right: 20px;
+             width: 200px;
+             height: 8px;
+             background: rgba(255,255,255,0.3);
+             border-radius: 4px;
+             overflow: hidden;
+         }
+
+         #timerBarFill {
+             height: 100%;
+             background: linear-gradient(90deg, #2E7D32 0%, #F44336 100%);
+             border-radius: 4px;
+             transition: width 1s linear;
+             width: 100%;
+         }
+
+        #gameOver {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            display: none;
+            pointer-events: all;
+        }
+
+        #gameOver h2 {
+            font-size: 28px;
+            margin-bottom: 15px;
+        }
+
+         #finalScore {
+             font-size: 24px;
+             margin-bottom: 10px;
+         }
+
+         #highScore {
+             font-size: 20px;
+             margin-bottom: 20px;
+             color: #FFD700;
+         }
+
+        #restartBtn {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 18px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        #restartBtn:hover {
+            background: #45a049;
+        }
+
+        #startScreen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            pointer-events: all;
+        }
+
+        #startScreen h1 {
+            font-size: 36px;
+            margin-bottom: 20px;
+        }
+
+        #startScreen p {
+            font-size: 18px;
+            margin-bottom: 30px;
+            line-height: 1.5;
+        }
+
+        #startBtn {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        #startBtn:hover {
+            background: #45a049;
+        }
+
+         .circle {
+             position: absolute;
+             border-radius: 50%;
+             cursor: pointer;
+             transition: transform 0.1s ease;
+             pointer-events: all;
+             box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+         }
+
+         .circle:hover {
+             transform: scale(1.1);
+         }
+
+         .circle:active {
+             transform: scale(0.9);
+         }
+
+         .circle.tapped {
+             animation: tapAnimation 0.4s ease-out forwards;
+         }
+
+         @keyframes tapAnimation {
+             0% {
+                 transform: scale(1);
+                 opacity: 1;
+             }
+             100% {
+                 transform: scale(0);
+                 opacity: 0;
+             }
+         }
+
+         .particle {
+             position: absolute;
+             width: 8px;
+             height: 8px;
+             background: inherit;
+             border-radius: 50%;
+             pointer-events: none;
+             animation: particleExplosion 0.6s ease-out forwards;
+         }
+
+         @keyframes particleExplosion {
+             0% {
+                 transform: scale(1) translate(0, 0);
+                 opacity: 1;
+             }
+             100% {
+                 transform: scale(0.3) translate(var(--random-x), var(--random-y));
+                 opacity: 0;
+             }
+         }
+
+         .circle.chain {
+             animation: chainExplosion 0.3s ease-out forwards;
+         }
+
+         @keyframes chainExplosion {
+             0% {
+                 transform: scale(1);
+                 opacity: 1;
+             }
+             50% {
+                 transform: scale(1.5) rotate(90deg);
+                 opacity: 0.6;
+             }
+             100% {
+                 transform: scale(0) rotate(180deg);
+                 opacity: 0;
+             }
+         }
+
+         .bomb {
+             background: radial-gradient(circle, #FF6B6B 0%, #8B0000 100%) !important;
+             box-shadow: 0 0 20px #FF0000, inset 0 0 10px #FFFF00 !important;
+             animation: bombPulse 1s ease-in-out infinite alternate;
+         }
+
+         @keyframes bombPulse {
+             0% {
+                 box-shadow: 0 0 20px #FF0000, inset 0 0 10px #FFFF00;
+             }
+             100% {
+                 box-shadow: 0 0 30px #FF0000, inset 0 0 15px #FFFF00;
+             }
+         }
+
+         .screenExplosion {
+             position: fixed;
+             top: 0;
+             left: 0;
+             width: 100vw;
+             height: 100vh;
+             background: radial-gradient(circle, rgba(255,255,0,0.8) 0%, rgba(255,0,0,0.6) 50%, transparent 70%);
+             pointer-events: none;
+             z-index: 1000;
+             animation: screenExplosionEffect 0.8s ease-out forwards;
+         }
+
+         @keyframes screenExplosionEffect {
+             0% {
+                 transform: scale(0);
+                 opacity: 1;
+             }
+             50% {
+                 transform: scale(1.2);
+                 opacity: 0.8;
+             }
+             100% {
+                 transform: scale(2);
+                 opacity: 0;
+             }
+         }
+
+         .tapEffect {
+             position: absolute;
+             width: 60px;
+             height: 60px;
+             border: 3px solid #fff;
+             border-radius: 50%;
+             pointer-events: none;
+             animation: rippleEffect 0.6s ease-out forwards;
+         }
+
+         @keyframes rippleEffect {
+             0% {
+                 transform: scale(0);
+                 opacity: 1;
+             }
+             100% {
+                 transform: scale(3);
+                 opacity: 0;
+             }
+         }
+
+         @media (max-width: 480px) {
+             #score {
+                 font-size: 20px;
+             }
+             
+             #timerBar {
+                 width: 150px;
+             }
+             
+             #gameOver h2 {
+                 font-size: 24px;
+             }
+             
+             #finalScore {
+                 font-size: 20px;
+             }
+             
+             #startScreen h1 {
+                 font-size: 28px;
+             }
+             
+             #startScreen p {
+                 font-size: 16px;
+             }
+         }
+    </style>
+</head>
+<body>
+    <div id="gameContainer">
+        <div id="ui">
+            <div id="score">スコア: 0</div>
+            <div id="timerBar">
+                <div id="timerBarFill"></div>
+            </div>
+        </div>
+        
+        <div id="startScreen">
+            <h1>🎯 タップゲーム</h1>
+            <p>画面上に表示される丸をタップして消そう！<br>
+            15秒以内にどれだけタップできるか挑戦！</p>
+            <button id="startBtn">ゲーム開始</button>
+        </div>
+        
+        <div id="gameOver">
+            <h2>ゲーム終了！</h2>
+            <div id="finalScore">スコア: 0</div>
+            <div id="highScore">ハイスコア: 0</div>
+            <button id="restartBtn">もう一度プレイ</button>
+        </div>
+    </div>
+
+    <script>
+        class TapGame {
+            constructor() {
+                this.score = 0;
+                this.timeLeft = 15;
+                this.gameActive = false;
+                this.circles = [];
+                this.gameTimer = null;
+                this.circleSpawnTimer = null;
+                this.highScore = this.loadHighScore();
+                
+                this.initializeElements();
+                this.bindEvents();
+            }
+            
+             initializeElements() {
+                 this.gameContainer = document.getElementById('gameContainer');
+                 this.startScreen = document.getElementById('startScreen');
+                 this.gameOverScreen = document.getElementById('gameOver');
+                 this.scoreElement = document.getElementById('score');
+                 this.timerBarFill = document.getElementById('timerBarFill');
+                 this.finalScoreElement = document.getElementById('finalScore');
+                 this.highScoreElement = document.getElementById('highScore');
+                 this.startBtn = document.getElementById('startBtn');
+                 this.restartBtn = document.getElementById('restartBtn');
+             }
+            
+            bindEvents() {
+                this.startBtn.addEventListener('click', () => this.startGame());
+                this.restartBtn.addEventListener('click', () => this.restartGame());
+                
+                // タッチイベントのサポート
+                this.gameContainer.addEventListener('touchstart', (e) => {
+                    if (this.gameActive) {
+                        e.preventDefault();
+                        this.handleTap(e.touches[0]);
+                    }
+                });
+                
+                // マウスクリックのサポート（デスクトップ用）
+                this.gameContainer.addEventListener('click', (e) => {
+                    if (this.gameActive && e.target.classList.contains('circle')) {
+                        this.handleTap(e);
+                    }
+                });
+            }
+            
+            startGame() {
+                this.startScreen.style.display = 'none';
+                this.gameOverScreen.style.display = 'none';
+                this.score = 0;
+                this.timeLeft = 15;
+                this.gameActive = true;
+                this.circles = [];
+                
+                this.updateUI();
+                this.startTimers();
+            }
+            
+             startTimers() {
+                 // ゲームタイマー
+                 this.gameTimer = setInterval(() => {
+                     this.timeLeft--;
+                     this.updateUI();
+                     
+                     if (this.timeLeft <= 0) {
+                         this.endGame();
+                     }
+                 }, 1000);
+                 
+                 // 丸の生成タイマー（時間に応じて頻度を変更）
+                 this.spawnCircles();
+             }
+             
+             spawnCircles() {
+                 if (!this.gameActive) return;
+                 
+                 // 時間に応じた出現頻度調整
+                 let baseInterval;
+                 if (this.timeLeft > 10) {
+                     // 序盤：ゆっくり（元の頻度）
+                     baseInterval = 400 + Math.random() * 300; // 0.4-0.7秒
+                 } else if (this.timeLeft > 3) {
+                     // 中盤：少し早く
+                     baseInterval = 200 + Math.random() * 200; // 0.2-0.4秒
+                 } else {
+                     // 終盤：超高速（5倍の頻度）
+                     baseInterval = 80 + Math.random() * 50; // 0.08-0.13秒
+                 }
+                 
+                 this.circleSpawnTimer = setTimeout(() => {
+                     this.spawnCircle();
+                     this.spawnCircles(); // 再帰的に呼び出し
+                 }, baseInterval);
+             }
+            
+             spawnCircle() {
+                 const circle = document.createElement('div');
+                 circle.className = 'circle';
+                 
+                 // ランダムなサイズ（50-100px）- より大きく
+                 const size = 50 + Math.random() * 50;
+                 circle.style.width = size + 'px';
+                 circle.style.height = size + 'px';
+                 
+                 // 爆弾判定（5%の確率）
+                 const isBomb = Math.random() < 0.05;
+                 if (isBomb) {
+                     circle.classList.add('bomb');
+                 } else {
+                     // ランダムな色
+                     const colors = [
+                         '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', 
+                         '#FFEAA7', '#DDA0DD', '#98D8C8', '#F7DC6F'
+                     ];
+                     const color = colors[Math.floor(Math.random() * colors.length)];
+                     circle.style.backgroundColor = color;
+                 }
+                
+                // ランダムな位置（画面内に収まるように）
+                const maxX = window.innerWidth - size;
+                const maxY = window.innerHeight - size;
+                const x = Math.random() * maxX;
+                const y = Math.random() * maxY;
+                
+                circle.style.left = x + 'px';
+                circle.style.top = y + 'px';
+                
+                // アニメーション効果
+                circle.style.opacity = '0';
+                circle.style.transform = 'scale(0)';
+                
+                this.gameContainer.appendChild(circle);
+                this.circles.push(circle);
+                
+                // フェードインアニメーション
+                setTimeout(() => {
+                    circle.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+                    circle.style.opacity = '1';
+                    circle.style.transform = 'scale(1)';
+                }, 10);
+                
+                // 一定時間後に自動削除
+                setTimeout(() => {
+                    if (circle.parentNode) {
+                        this.removeCircle(circle);
+                    }
+                }, 3000);
+            }
+            
+            handleTap(event) {
+                const rect = this.gameContainer.getBoundingClientRect();
+                const x = event.clientX - rect.left;
+                const y = event.clientY - rect.top;
+                
+                // クリックされた位置にある丸を探す
+                for (let i = this.circles.length - 1; i >= 0; i--) {
+                    const circle = this.circles[i];
+                    const circleRect = circle.getBoundingClientRect();
+                    const circleX = circleRect.left - rect.left;
+                    const circleY = circleRect.top - rect.top;
+                    const radius = circleRect.width / 2;
+                    
+                    const distance = Math.sqrt(
+                        Math.pow(x - (circleX + radius), 2) + 
+                        Math.pow(y - (circleY + radius), 2)
+                    );
+                    
+                    if (distance <= radius) {
+                        this.tapCircle(circle);
+                        break;
+                    }
+                }
+            }
+            
+             tapCircle(circle) {
+                 // 爆弾かどうかチェック
+                 if (circle.classList.contains('bomb')) {
+                     this.explodeAllCircles();
+                     return;
+                 }
+                 
+                 // スコアアップ
+                 this.score++;
+                 this.updateUI();
+                 
+                 // 時間延長（0.1秒、ただし初期値15秒を超えない）
+                 this.timeLeft = Math.min(15, this.timeLeft + 0.1);
+                 
+                 // パーティクルエフェクト
+                 this.createParticleEffect(circle);
+                 
+                 // タップエフェクト（リップルエフェクト）
+                 this.createTapEffect(circle);
+                 
+                 // アニメーション付きで削除
+                 circle.classList.add('tapped');
+                 
+                 // 連鎖爆発をチェック
+                 this.checkChainExplosion(circle);
+                 
+                 // 丸を削除
+                 setTimeout(() => {
+                     this.removeCircle(circle);
+                 }, 400);
+             }
+             
+             createParticleEffect(circle) {
+                 const rect = circle.getBoundingClientRect();
+                 const centerX = rect.left + rect.width / 2;
+                 const centerY = rect.top + rect.height / 2;
+                 const particleCount = 8;
+                 
+                 for (let i = 0; i < particleCount; i++) {
+                     const particle = document.createElement('div');
+                     particle.className = 'particle';
+                     particle.style.left = centerX + 'px';
+                     particle.style.top = centerY + 'px';
+                     particle.style.backgroundColor = circle.style.backgroundColor;
+                     
+                     // ランダムな方向に飛ばす
+                     const angle = (i / particleCount) * Math.PI * 2;
+                     const distance = 60 + Math.random() * 40;
+                     const randomX = Math.cos(angle) * distance;
+                     const randomY = Math.sin(angle) * distance;
+                     
+                     particle.style.setProperty('--random-x', randomX + 'px');
+                     particle.style.setProperty('--random-y', randomY + 'px');
+                     
+                     this.gameContainer.appendChild(particle);
+                     
+                     // パーティクルを削除
+                     setTimeout(() => {
+                         if (particle.parentNode) {
+                             particle.parentNode.removeChild(particle);
+                         }
+                     }, 600);
+                 }
+             }
+             
+             checkChainExplosion(tappedCircle) {
+                 const tappedRect = tappedCircle.getBoundingClientRect();
+                 const tappedX = tappedRect.left + tappedRect.width / 2;
+                 const tappedY = tappedRect.top + tappedRect.height / 2;
+                 const chainRadius = 120; // 連鎖範囲
+                 
+                 this.circles.forEach(circle => {
+                     if (circle === tappedCircle || circle.classList.contains('tapped') || circle.classList.contains('chain')) return;
+                     
+                     const circleRect = circle.getBoundingClientRect();
+                     const circleX = circleRect.left + circleRect.width / 2;
+                     const circleY = circleRect.top + circleRect.height / 2;
+                     
+                     const distance = Math.sqrt(
+                         Math.pow(tappedX - circleX, 2) + Math.pow(tappedY - circleY, 2)
+                     );
+                     
+                     if (distance <= chainRadius) {
+                         // 連鎖爆発
+                         setTimeout(() => {
+                             this.tapCircle(circle);
+                         }, 100 + Math.random() * 200); // ランダムな遅延
+                     }
+                 });
+             }
+             
+             explodeAllCircles() {
+                 // 画面全体爆発エフェクト
+                 this.createScreenExplosion();
+                 
+                 // すべての丸をタップしたことに
+                 this.circles.forEach(circle => {
+                     if (!circle.classList.contains('tapped')) {
+                         this.score++;
+                         circle.classList.add('tapped');
+                         setTimeout(() => {
+                             this.removeCircle(circle);
+                         }, 400);
+                     }
+                 });
+                 
+                 this.updateUI();
+             }
+             
+             createScreenExplosion() {
+                 const explosion = document.createElement('div');
+                 explosion.className = 'screenExplosion';
+                 document.body.appendChild(explosion);
+                 
+                 setTimeout(() => {
+                     if (explosion.parentNode) {
+                         explosion.parentNode.removeChild(explosion);
+                     }
+                 }, 800);
+             }
+             
+             createTapEffect(circle) {
+                 const rect = circle.getBoundingClientRect();
+                 const effect = document.createElement('div');
+                 effect.className = 'tapEffect';
+                 effect.style.left = (rect.left + rect.width/2 - 30) + 'px';
+                 effect.style.top = (rect.top + rect.height/2 - 30) + 'px';
+                 
+                 this.gameContainer.appendChild(effect);
+                 
+                 // エフェクトを削除
+                 setTimeout(() => {
+                     if (effect.parentNode) {
+                         effect.parentNode.removeChild(effect);
+                     }
+                 }, 600);
+             }
+            
+            removeCircle(circle) {
+                const index = this.circles.indexOf(circle);
+                if (index > -1) {
+                    this.circles.splice(index, 1);
+                }
+                if (circle.parentNode) {
+                    circle.parentNode.removeChild(circle);
+                }
+            }
+            
+             updateUI() {
+                 this.scoreElement.textContent = `スコア: ${this.score}`;
+                 
+                 // タイマーバーの更新
+                 const percentage = (this.timeLeft / 15) * 100;
+                 this.timerBarFill.style.width = percentage + '%';
+             }
+            
+             endGame() {
+                 this.gameActive = false;
+                 clearInterval(this.gameTimer);
+                 clearTimeout(this.circleSpawnTimer);
+                 
+                 // 残っている丸を削除
+                 this.circles.forEach(circle => {
+                     if (circle.parentNode) {
+                         circle.parentNode.removeChild(circle);
+                     }
+                 });
+                 this.circles = [];
+                 
+                 // ハイスコア更新
+                 if (this.score > this.highScore) {
+                     this.highScore = this.score;
+                     this.saveHighScore(this.highScore);
+                 }
+                 
+                 // 結果表示
+                 this.finalScoreElement.textContent = `スコア: ${this.score}`;
+                 this.highScoreElement.textContent = `ハイスコア: ${this.highScore}`;
+                 this.gameOverScreen.style.display = 'block';
+             }
+            
+            restartGame() {
+                this.startGame();
+            }
+            
+            loadHighScore() {
+                const saved = localStorage.getItem('tapGameHighScore');
+                return saved ? parseInt(saved) : 0;
+            }
+            
+            saveHighScore(score) {
+                localStorage.setItem('tapGameHighScore', score.toString());
+            }
+        }
+        
+         // 実際のビューポートの高さをCSS変数に設定
+         function updateVh() {
+             document.documentElement.style.setProperty('--vh', `${window.innerHeight * 0.01}px`);
+         }
+         window.addEventListener('resize', updateVh);
+         window.addEventListener('orientationchange', updateVh);
+         updateVh(); // 初期実行
+
+         // ゲーム開始
+         document.addEventListener('DOMContentLoaded', () => {
+             new TapGame();
+         });
+        
+        // フルスクリーン対応
+        document.addEventListener('touchstart', function(e) {
+            if (e.touches.length > 1) {
+                e.preventDefault();
+            }
+        }, { passive: false });
+        
+        // ダブルタップズーム防止
+        let lastTouchEnd = 0;
+        document.addEventListener('touchend', function(e) {
+            const now = (new Date()).getTime();
+            if (now - lastTouchEnd <= 300) {
+                e.preventDefault();
+            }
+            lastTouchEnd = now;
+        }, false);
+    </script>
+</body>
+</html>

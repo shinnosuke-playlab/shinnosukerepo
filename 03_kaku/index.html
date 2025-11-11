@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>核抑止力シミュレーションゲーム（日本 vs 北朝鮮）</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        .game-container {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #333;
+        }
+        
+        .status-panel {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 5px;
+        }
+        
+        .country-status {
+            text-align: center;
+            flex: 1;
+        }
+        
+        .country-name {
+            font-weight: bold;
+            font-size: 18px;
+            margin-bottom: 5px;
+        }
+        
+        .japan { color: #dc3545; }
+        .north-korea { color: #6c757d; }
+        
+        .status-info {
+            font-size: 14px;
+            margin: 2px 0;
+        }
+        
+        .actions-panel {
+            margin-bottom: 20px;
+        }
+        
+        .action-buttons {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .action-btn {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            background: #007bff;
+            color: white;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.3s;
+        }
+        
+        .action-btn:hover {
+            background: #0056b3;
+        }
+        
+        .action-btn:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+        }
+        
+        .action-btn.danger {
+            background: #dc3545;
+        }
+        
+        .action-btn.danger:hover {
+            background: #c82333;
+        }
+        
+        .action-btn.economy {
+            background: #28a745;
+        }
+        
+        .action-btn.economy:hover {
+            background: #218838;
+        }
+        
+        .log-panel {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 15px;
+            height: 300px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            line-height: 1.4;
+        }
+        
+        .log-entry {
+            margin-bottom: 5px;
+            padding: 2px 0;
+        }
+        
+        .log-turn {
+            color: #007bff;
+            font-weight: bold;
+        }
+        
+        .log-action {
+            color: #28a745;
+        }
+        
+        .log-result {
+            color: #dc3545;
+        }
+        
+        .log-warning {
+            color: #ffc107;
+            font-weight: bold;
+        }
+        
+        .log-danger {
+            color: #dc3545;
+            font-weight: bold;
+        }
+        
+        .turn-info {
+            text-align: center;
+            margin-bottom: 15px;
+            font-size: 18px;
+            font-weight: bold;
+            color: #495057;
+        }
+        
+        .game-over {
+            text-align: center;
+            padding: 20px;
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            border-radius: 5px;
+            color: #721c24;
+            font-size: 18px;
+            font-weight: bold;
+        }
+        
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="header">
+            <h1>核抑止力シミュレーションゲーム</h1>
+            <h2>日本 vs 北朝鮮</h2>
+        </div>
+        
+        <div class="status-panel">
+            <div class="country-status">
+                <div class="country-name japan">日本</div>
+                <div class="status-info">資金: <span id="japan-funds">100</span></div>
+                <div class="status-info">核: <span id="japan-nuclear">なし</span></div>
+                <div class="status-info">開発中: <span id="japan-developing">-</span></div>
+            </div>
+            <div class="country-status">
+                <div class="country-name north-korea">北朝鮮</div>
+                <div class="status-info">資金: <span id="north-korea-funds">100</span></div>
+                <div class="status-info">核: <span id="north-korea-nuclear">なし</span></div>
+                <div class="status-info">開発中: <span id="north-korea-developing">-</span></div>
+            </div>
+        </div>
+        
+        <div class="turn-info">
+            ターン <span id="current-turn">1</span>
+        </div>
+        
+        <div class="actions-panel">
+            <div class="action-buttons">
+                <button class="action-btn" onclick="playerAction('recon')">偵察 (10)</button>
+                <button class="action-btn" onclick="playerAction('develop')">核開発 (20)</button>
+                <button class="action-btn danger" onclick="playerAction('launch')">核発射 (10)</button>
+                <button class="action-btn" onclick="playerAction('intercept')">迎撃 (10)</button>
+                <button class="action-btn economy" onclick="playerAction('sanctions')">経済制裁</button>
+                <button class="action-btn" onclick="playerAction('pass')">何もしない</button>
+            </div>
+        </div>
+        
+        <div class="log-panel" id="game-log">
+            <div class="log-entry log-turn">=== ゲーム開始 ===</div>
+            <div class="log-entry">日本と北朝鮮の核抑止力シミュレーションを開始します。</div>
+            <div class="log-entry">両国は資金100からスタートします。</div>
+        </div>
+        
+        <div id="game-over-panel" class="game-over hidden">
+            <div id="game-over-message"></div>
+        </div>
+    </div>
+
+    <script>
+        // ゲーム状態管理
+        const gameState = {
+            turn: 1,
+            japan: {
+                funds: 100,
+                hasNuclear: false,
+                developing: 0, // 開発中のターン数
+                lastAction: null
+            },
+            northKorea: {
+                funds: 100,
+                hasNuclear: false,
+                developing: 0,
+                lastAction: null
+            },
+            gameOver: false,
+            winner: null,
+            missileInFlight: false,
+            missileTarget: null,
+            missileArrivalTurn: 0,
+            interceptAttempted: false
+        };
+
+        // ログにメッセージを追加
+        function addLog(message, type = '') {
+            const logPanel = document.getElementById('game-log');
+            const logEntry = document.createElement('div');
+            logEntry.className = `log-entry ${type}`;
+            logEntry.textContent = message;
+            logPanel.appendChild(logEntry);
+            logPanel.scrollTop = logPanel.scrollHeight;
+        }
+
+        // UIを更新
+        function updateUI() {
+            document.getElementById('current-turn').textContent = gameState.turn;
+            document.getElementById('japan-funds').textContent = gameState.japan.funds;
+            document.getElementById('north-korea-funds').textContent = gameState.northKorea.funds;
+            
+            document.getElementById('japan-nuclear').textContent = gameState.japan.hasNuclear ? '保有' : 'なし';
+            document.getElementById('north-korea-nuclear').textContent = gameState.northKorea.hasNuclear ? '保有' : 'なし';
+            
+            document.getElementById('japan-developing').textContent = gameState.japan.developing > 0 ? `${gameState.japan.developing}ターン` : '-';
+            document.getElementById('north-korea-developing').textContent = gameState.northKorea.developing > 0 ? `${gameState.northKorea.developing}ターン` : '-';
+        }
+
+        // プレイヤーの行動
+        function playerAction(action) {
+            if (gameState.gameOver) return;
+            
+            let success = false;
+            let message = '';
+            
+            switch (action) {
+                case 'recon':
+                    if (gameState.japan.funds >= 10) {
+                        gameState.japan.funds -= 10;
+                        const hasNuclear = gameState.northKorea.hasNuclear;
+                        message = `偵察実行。北朝鮮の核状況: ${hasNuclear ? '保有' : 'なし'}`;
+                        success = true;
+                    } else {
+                        message = '資金が不足しています。';
+                    }
+                    break;
+                    
+                case 'develop':
+                    if (gameState.japan.funds >= 20 && gameState.japan.developing === 0 && !gameState.japan.hasNuclear) {
+                        gameState.japan.funds -= 20;
+                        gameState.japan.developing = 3;
+                        message = '核開発を開始しました（3ターンで完成）';
+                        success = true;
+                    } else if (gameState.japan.hasNuclear) {
+                        message = '既に核を保有しています。';
+                    } else if (gameState.japan.developing > 0) {
+                        message = '既に核開発中です。';
+                    } else {
+                        message = '資金が不足しています。';
+                    }
+                    break;
+                    
+                case 'launch':
+                    if (gameState.japan.funds >= 10 && gameState.japan.hasNuclear) {
+                        gameState.japan.funds -= 10;
+                        gameState.missileInFlight = true;
+                        gameState.missileTarget = 'northKorea';
+                        gameState.missileArrivalTurn = gameState.turn + 2;
+                        message = '核ミサイルを発射しました！2ターン後に着弾予定';
+                        success = true;
+                    } else if (!gameState.japan.hasNuclear) {
+                        message = '核を保有していません。';
+                    } else {
+                        message = '資金が不足しています。';
+                    }
+                    break;
+                    
+                case 'intercept':
+                    if (gameState.japan.funds >= 10 && gameState.missileInFlight && gameState.missileTarget === 'japan') {
+                        gameState.japan.funds -= 10;
+                        gameState.interceptAttempted = true;
+                        message = '迎撃システムを起動しました';
+                        success = true;
+                    } else if (!gameState.missileInFlight) {
+                        message = '迎撃対象のミサイルがありません。';
+                    } else {
+                        message = '資金が不足しています。';
+                    }
+                    break;
+                    
+                case 'sanctions':
+                    if (gameState.japan.funds >= 10) {
+                        gameState.japan.funds += 10; // 自国は+10
+                        gameState.northKorea.funds -= 30; // 相手は-30
+                        message = '経済制裁を実行しました（自国+10、北朝鮮-30）';
+                        success = true;
+                    } else {
+                        message = '資金が不足しています。';
+                    }
+                    break;
+                    
+                case 'pass':
+                    message = '何もしませんでした';
+                    success = true;
+                    break;
+            }
+            
+            if (success) {
+                gameState.japan.lastAction = action;
+                addLog(`[日本] ${message}`, 'log-action');
+                updateUI();
+                
+                // ミサイル着弾チェック
+                if (gameState.missileInFlight && gameState.missileArrivalTurn === gameState.turn) {
+                    handleMissileArrival();
+                } else {
+                    // 北朝鮮のAI行動
+                    setTimeout(() => {
+                        northKoreaAction();
+                    }, 1000);
+                }
+            } else {
+                addLog(`[日本] ${message}`, 'log-warning');
+            }
+        }
+
+        // 北朝鮮のAI行動
+        function northKoreaAction() {
+            if (gameState.gameOver) return;
+            
+            let action = '';
+            let message = '';
+            
+            // AIロジック
+            if (!gameState.northKorea.hasNuclear && gameState.northKorea.developing === 0) {
+                // 核を持たない場合：核開発を優先
+                if (gameState.northKorea.funds >= 20) {
+                    action = 'develop';
+                    gameState.northKorea.funds -= 20;
+                    gameState.northKorea.developing = 3;
+                    message = '核開発を開始しました（3ターンで完成）';
+                } else {
+                    action = 'pass';
+                    message = '資金不足のため何もしませんでした';
+                }
+            } else if (gameState.northKorea.hasNuclear) {
+                // 核保有後の行動
+                if (gameState.japan.funds < 20) {
+                    // 日本の資金が少なければ核発射
+                    if (gameState.northKorea.funds >= 10) {
+                        action = 'launch';
+                        gameState.northKorea.funds -= 10;
+                        gameState.missileInFlight = true;
+                        gameState.missileTarget = 'japan';
+                        gameState.missileArrivalTurn = gameState.turn + 2;
+                        message = '核ミサイルを発射しました！2ターン後に着弾予定';
+                    } else {
+                        action = 'pass';
+                        message = '資金不足のため何もしませんでした';
+                    }
+                } else if (gameState.japan.lastAction === 'sanctions') {
+                    // 日本が制裁してきた場合：経済報復
+                    if (gameState.northKorea.funds >= 10) {
+                        action = 'sanctions';
+                        gameState.northKorea.funds += 10;
+                        gameState.japan.funds -= 30;
+                        message = '経済報復を実行しました（自国+10、日本-30）';
+                    } else {
+                        action = 'pass';
+                        message = '資金不足のため何もしませんでした';
+                    }
+                } else {
+                    // その他の場合は脅迫
+                    action = 'threaten';
+                    message = '核保有を脅迫しました';
+                }
+            } else {
+                // 開発中の場合
+                action = 'pass';
+                message = '核開発中です';
+            }
+            
+            gameState.northKorea.lastAction = action;
+            addLog(`[北朝鮮] ${message}`, 'log-action');
+            updateUI();
+            
+            // ミサイル着弾チェック
+            if (gameState.missileInFlight && gameState.missileArrivalTurn === gameState.turn) {
+                handleMissileArrival();
+            } else {
+                // ターン終了処理
+                endTurn();
+            }
+        }
+
+        // ミサイル着弾処理
+        function handleMissileArrival() {
+            if (gameState.missileTarget === 'japan') {
+                // 日本への着弾
+                if (gameState.interceptAttempted) {
+                    const interceptSuccess = Math.random() < 0.5;
+                    if (interceptSuccess) {
+                        addLog('[日本] 迎撃成功！ミサイルを撃墜しました', 'log-result');
+                        gameState.missileInFlight = false;
+                        gameState.interceptAttempted = false;
+                    } else {
+                        addLog('[日本] 迎撃失敗...', 'log-result');
+                        addLog('[ゲーム終了] 日本が核攻撃により滅亡しました', 'log-danger');
+                        gameState.gameOver = true;
+                        gameState.winner = 'northKorea';
+                        showGameOver('北朝鮮の勝利！日本が核攻撃により滅亡しました。');
+                    }
+                } else {
+                    addLog('[ゲーム終了] 日本が核攻撃により滅亡しました', 'log-danger');
+                    gameState.gameOver = true;
+                    gameState.winner = 'northKorea';
+                    showGameOver('北朝鮮の勝利！日本が核攻撃により滅亡しました。');
+                }
+            } else {
+                // 北朝鮮への着弾
+                addLog('[ゲーム終了] 北朝鮮が核攻撃により滅亡しました', 'log-danger');
+                gameState.gameOver = true;
+                gameState.winner = 'japan';
+                showGameOver('日本の勝利！北朝鮮が核攻撃により滅亡しました。');
+            }
+            
+            if (!gameState.gameOver) {
+                endTurn();
+            }
+        }
+
+        // ターン終了処理
+        function endTurn() {
+            // 核開発の進行
+            if (gameState.japan.developing > 0) {
+                gameState.japan.developing--;
+                if (gameState.japan.developing === 0) {
+                    gameState.japan.hasNuclear = true;
+                    addLog('[日本] 核開発が完成しました！', 'log-result');
+                }
+            }
+            
+            if (gameState.northKorea.developing > 0) {
+                gameState.northKorea.developing--;
+                if (gameState.northKorea.developing === 0) {
+                    gameState.northKorea.hasNuclear = true;
+                    addLog('[北朝鮮] 核開発が完成しました！', 'log-result');
+                }
+            }
+            
+            // 勝利条件チェック
+            checkWinConditions();
+            
+            if (!gameState.gameOver) {
+                gameState.turn++;
+                addLog(`=== ターン ${gameState.turn} 開始 ===`, 'log-turn');
+                updateUI();
+            }
+        }
+
+        // 勝利条件チェック
+        function checkWinConditions() {
+            if (gameState.japan.funds <= 0) {
+                gameState.gameOver = true;
+                gameState.winner = 'northKorea';
+                showGameOver('北朝鮮の勝利！日本の資金が尽きました。');
+                return;
+            }
+            
+            if (gameState.northKorea.funds <= 0) {
+                gameState.gameOver = true;
+                gameState.winner = 'japan';
+                showGameOver('日本の勝利！北朝鮮の資金が尽きました。');
+                return;
+            }
+            
+            // 膠着状態チェック（両国が核保有して一定ターン経過）
+            if (gameState.japan.hasNuclear && gameState.northKorea.hasNuclear && gameState.turn >= 20) {
+                gameState.gameOver = true;
+                gameState.winner = 'stalemate';
+                showGameOver('トゥルーエンド！核抑止力により平和が保たれました。');
+                return;
+            }
+        }
+
+        // ゲーム終了表示
+        function showGameOver(message) {
+            document.getElementById('game-over-message').textContent = message;
+            document.getElementById('game-over-panel').classList.remove('hidden');
+            
+            // ボタンを無効化
+            const buttons = document.querySelectorAll('.action-btn');
+            buttons.forEach(btn => btn.disabled = true);
+        }
+
+        // 初期化
+        updateUI();
+    </script>
+</body>
+</html>
