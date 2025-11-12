@@ -3,43 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>オセロゲーム - 対CPU</title>
+    <title>オセロ</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="container">
-        <h1>⚫ オセロゲーム ⚪</h1>
-        
-        <div class="difficulty">
-            <label for="difficulty">難易度を選択:</label>
-            <div class="difficulty-buttons" id="difficultyButtons">
-                <button class="difficulty-btn active" data-difficulty="easy">簡単</button>
-                <button class="difficulty-btn" data-difficulty="normal">普通</button>
-                <button class="difficulty-btn" data-difficulty="hard">難しい</button>
-            </div>
-        </div>
 
         <div class="info">
             <div class="player-info">
-                <h3>🧑 あなた (白)</h3>
+                <h3>あなた (白)</h3>
                 <div class="score" id="playerScore">0</div>
             </div>
             <div class="cpu-info">
-                <h3>🤖 CPU (黒)</h3>
+                <h3>CPU (黒)</h3>
                 <div class="score" id="cpuScore">0</div>
             </div>
         </div>
 
-        <div class="turn" id="turn">あなたのターンです</div>
-        <div class="status message" id="status">ゲーム開始</div>
+        <div class="turn" id="turn"></div>
 
         <div class="board-container">
             <div class="board" id="board"></div>
         </div>
 
         <div class="controls">
-            <button class="btn-hint" id="hintBtn">💡 ヒント</button>
-            <button class="btn-new-game" id="newGameBtn">🔄 新しいゲーム</button>
+            <button class="btn-new-game" id="newGameBtn">🔄 最初から</button>
         </div>
     </div>
 
@@ -47,11 +35,11 @@
         <div class="modal-content">
             <h2 id="gameOverTitle">ゲーム終了</h2>
             <div class="final-score">
-                <p>あなた(白): <span id="finalPlayerScore">0</span></p>
+                <p>YOU(白): <span id="finalPlayerScore">0</span></p>
                 <p>CPU(黒): <span id="finalCpuScore">0</span></p>
             </div>
             <div class="winner" id="winner"></div>
-            <button class="btn-new-game" onclick="location.reload()">🔄 もう一度遊ぶ</button>
+            <button class="btn-new-game" onclick="location.reload()">🔄 もう一度</button>
         </div>
     </div>
 
