@@ -4,7 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>オセロ</title>
-    <link rel="stylesheet" href="style.css">
+    <!-- 分割した CSS を読み込み (読み込む順序に注意: base -> layout -> components -> pieces -> responsive) -->
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/layout.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/pieces.css">
+    <link rel="stylesheet" href="css/responsive.css">
 </head>
 <body>
     <div class="container">

@@ -135,7 +135,7 @@ OthelloGame.prototype.flipPiecesAnimated = function(row, col, player) {
         return;
     }
 
-    // 順次反転（視認性のため 100ms ごとに 1 枚ずつ更新）
+    // 順次反転（視認性のため FLIP_ANIMATION_INTERVAL ごとに 1 枚ずつ更新）
     let index = 0;
     const flipInterval = setInterval(() => {
         if (index < toFlipList.length) {
@@ -153,7 +153,7 @@ OthelloGame.prototype.flipPiecesAnimated = function(row, col, player) {
             this.renderBoard();
             if (player === 'black') this.continueAfterCPUMove();
         }
-    }, 100);
+    }, OthelloGame.TIMING.FLIP_ANIMATION_INTERVAL);
 };
 
 
@@ -199,7 +199,7 @@ OthelloGame.prototype.flipPiecesAnimatedForPlayer = function(row, col, player) {
             this.consecutivePass = 0;
             this.updateUI();
             this.renderBoard();
-            setTimeout(() => this.cpuMove(), 800);
+            setTimeout(() => this.cpuMove(), OthelloGame.TIMING.CPU_THINK_DELAY);
         }, 300); // CSS 側の placing アニメ時間に合わせる
         return;
     }
@@ -229,9 +229,9 @@ OthelloGame.prototype.flipPiecesAnimatedForPlayer = function(row, col, player) {
             this.consecutivePass = 0;
             this.updateUI();
             this.renderBoard();
-            setTimeout(() => this.cpuMove(), 800);
+            setTimeout(() => this.cpuMove(), OthelloGame.TIMING.CPU_THINK_DELAY);
         }
-    }, 100);
+    }, OthelloGame.TIMING.FLIP_ANIMATION_INTERVAL);
 };
 
 
@@ -253,7 +253,7 @@ OthelloGame.prototype.continueAfterCPUMove = function() {
             this.currentPlayer = 'black';
             this.updateUI();
             this.renderBoard();
-            setTimeout(() => this.cpuMove(), 800);
+            setTimeout(() => this.cpuMove(), OthelloGame.TIMING.CPU_THINK_DELAY);
         }
     } else {
         // 通常の手番交代（白プレイヤーへ）
@@ -304,7 +304,7 @@ OthelloGame.prototype.cpuMove = function() {
     setTimeout(() => {
         soundManager.playPlaceSound();
         this.flipPiecesAnimated(row, col, 'black');
-    }, 600);
+    }, OthelloGame.TIMING.CPU_FLIP_DELAY);
 };
 
 

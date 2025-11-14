@@ -1,0 +1,151 @@
+/*
+  components.css
+  - ボタン、モーダル、コントロールなど UI コンポーネントのスタイル
+*/
+
+/* -------------------------
+   コントロール領域
+   - ゲーム操作ボタンを中央に並べるラッパー
+   ------------------------- */
+.controls {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-top: 20px;
+    flex-wrap: wrap;
+}
+
+
+/* -------------------------
+   ボタン共通スタイル
+   - パディング、角丸、クリック時のフィードバックなどを共通化
+   ------------------------- */
+button {
+    padding: 12px 24px;
+    font-size: 16px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background 0.3s, transform 0.1s;
+    font-weight: bold;
+}
+
+/* 押下時の軽いスケール */
+button:active {
+    transform: scale(0.98);
+}
+
+/* 新ゲームボタン（強調色） */
+.btn-new-game {
+    background: #667eea;
+    color: white;
+}
+
+.btn-new-game:hover {
+    background: #5568d3;
+}
+
+
+/* -------------------------
+   モーダル（ゲーム終了等）
+   - 背景の暗転と中央に表示される白いコンテンツ
+   - JS 側で .active を付与して表示制御
+   ------------------------- */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal.active {
+    display: flex;
+}
+
+.modal-content {
+    background: white;
+    padding: 40px;
+    border-radius: 10px;
+    text-align: center;
+    max-width: 400px;
+}
+
+/* モーダル内の見出し */
+.modal-content h2 {
+    font-size: 28px;
+    margin-bottom: 20px;
+    color: #333;
+}
+
+/* 最終スコア表示エリア */
+.final-score {
+    margin: 20px 0;
+    font-size: 20px;
+}
+
+.final-score p {
+    margin: 10px 0;
+    color: #666;
+}
+
+/* 勝者表示（強調表示） */
+.winner {
+    font-size: 24px;
+    font-weight: bold;
+    color: #4caf50;
+    margin: 20px 0;
+}
+
+/* モーダル内のボタン微調整 */
+.modal button {
+    margin-top: 20px;
+    padding: 12px 32px;
+    font-size: 16px;
+}
+
+
+/* -------------------------
+   難易度ボタン周り（必要に応じて JS で切替）
+   - 非表示、ボタンスタイル、アクティブ状態の容易な切替
+   ------------------------- */
+.difficulty {
+    display: none;
+}
+
+.difficulty-buttons {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.difficulty-btn {
+    padding: 10px 20px;
+    border: 2px solid #667eea;
+    background: white;
+    color: #667eea;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+/* アクティブ状態は背景を塗りつぶす */
+.difficulty-btn.active {
+    background: #667eea;
+    color: white;
+}
+
+.difficulty-btn:hover {
+    background: #667eea;
+    color: white;
+}
+
+.difficulty-buttons.hidden {
+    display: none;
+}

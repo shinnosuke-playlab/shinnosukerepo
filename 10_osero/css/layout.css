@@ -1,0 +1,62 @@
+/*
+  layout.css
+  - ボードやセル、グリッドなどレイアウトに関するスタイルをまとめる
+*/
+
+/* -------------------------
+   ボード配置コンテナ
+   - ボード自体を中央に寄せるためのラッパー
+   ------------------------- */
+.board-container {
+    display: flex;
+    justify-content: center;
+    margin: 20px 0;
+}
+
+
+/* -------------------------
+   盤面（Board）
+   - 8x8 のグリッドを定義
+   - マス間のギャップや背景色、角丸、影を設定
+   ------------------------- */
+.board {
+    display: grid;
+    grid-template-columns: repeat(8, 60px);
+    grid-template-rows: repeat(8, 60px);
+    gap: 1px;
+    background: #2d5016;
+    padding: 5px;
+    border-radius: 5px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+
+/* -------------------------
+   マス（Cell）
+   - 各セルの基本スタイル。hover 時の視覚フィードバックを追加
+   - .disabled を付けることで hover の拡張を無効化できる
+   ------------------------- */
+.cell {
+    background: #2d8659;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 3px;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.cell:hover {
+    transform: scale(0.95);
+    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.3);
+}
+
+/* 無効化されたセルは拡大しない */
+.cell.disabled:hover {
+    transform: scale(1);
+}
+
+/* 合法手ハイライト（内部的な状態クラスを付与して使用） */
+.cell.valid-move {
+    box-shadow: inset 0 0 5px #ffff00;
+}

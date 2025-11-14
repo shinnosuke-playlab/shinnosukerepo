@@ -1,0 +1,33 @@
+/*
+  responsive.css
+  - 画面サイズに応じた調整（メディアクエリ）
+*/
+
+/* -------------------------
+   小画面向け調整 (スマホ等)
+   - 盤面・ピース・コンテナ・見出しのサイズを縮小
+   ------------------------- */
+@media (max-width: 600px) {
+    /* ボードの一マスを小さめにして横幅に収める */
+    .board {
+        grid-template-columns: repeat(8, 45px);
+        grid-template-rows: repeat(8, 45px);
+    }
+
+    /* ピースサイズを縮小して見栄えを保つ */
+    .piece {
+        width: 36px;
+        height: 36px;
+        font-size: 18px;
+    }
+
+    /* コンテナのパディングを狭める */
+    .container {
+        padding: 15px;
+    }
+
+    /* 小画面用の見出しサイズ */
+    h1 {
+        font-size: 20px;
+    }
+}

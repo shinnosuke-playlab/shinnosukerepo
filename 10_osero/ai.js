@@ -1,29 +1,27 @@
 // ai.js
-// CPU (黒) の手を決めるシンプルな評価ロジック。
-// このプロジェクトでは「難易度選択を廃止して」hard 固定の戦略を使っています。
-// 目的: 簡潔でそれなりに強い手を選ぶ（コーナー優先 → エッジ重視 → 最大反転数）
+// CPU (黒) の手を決める評価ロジック（シンプルなヒューリスティック）
+// 戦略の要点: コーナー優先 -> エッジを重視 -> 反転枚数最大を選択
+
 
 /**
  * selectCPUMove(validMoves)
- * 外部から呼ばれるエントリポイント。現在は hard 戦略に委譲。
- * validMoves: 既に盤面のルールに基づき合法と判定された [row,col] の配列
+ * - エントリポイント。与えられた合法手から CPU の手を選ぶ
+ * - 引数: validMoves - [[row, col], ...]
+ * - 戻り値: [row, col]
  */
 OthelloGame.prototype.selectCPUMove = function(validMoves) {
+    // 現在は hard 戦略を使う（ファイル内の戦略関数に委譲）
     return this.selectHardMove(validMoves);
 };
 
 
 /**
  * selectHardMove(moves)
- * - まずコーナーがあればランダムに取る（コーナーは最も強力な位置）
- * - 次に盤の端（縁）にある手のうち、反転数が最大となるものを選ぶ
+ * - コーナーがあれば優先して取る
+ * - 次に盤の端（エッジ）の中で反転数が最大の手を選ぶ
  * - それ以外は全手の中から反転数が最大の手を選ぶ
- +
- * 戦略の意図:
- * - コーナーは安全でゲーム展開に有利なので最優先
- * - エッジは比較的安全かつ得点になりやすい
- * - 単純な反転数評価は短期的に有利だが中長期的には欠点がある（角を与えるなど）
- *   ここでは簡潔さを優先しているため、そのトレードオフを受け入れている。
+ * - 引数: moves - [[row, col], ...]
+ * - 戻り値: [row, col]
  */
 OthelloGame.prototype.selectHardMove = function(moves) {
     // コーナー優先（0,0 0,7 7,0 7,7）
@@ -55,9 +53,9 @@ OthelloGame.prototype.selectHardMove = function(moves) {
 
 /**
  * countFlips(row, col, player)
- * - 指定の (row,col) に player が石を置いた場合に "即時に" 何枚返せるかを数えるヘルパー。
- * - これは AI の評価用であり、実際に盤面を変更するものではない。
- * - 実装は othello.js の反転判定ロジックと同じく 8 方向を走査する。
+ * - 指定の (row,col) に player が石を置いた場合に何枚返せるかを数える
+ * - AI の評価用ヘルパー（盤面は変更しない）
+ * - 戻り値: number
  */
 OthelloGame.prototype.countFlips = function(row, col, player) {
     const opponent = player === 'black' ? 'white' : 'black';

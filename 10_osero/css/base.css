@@ -1,0 +1,101 @@
+/*
+  base.css
+  - 全体リセット、フォント、背景、コンテナ、見出し、スコア周りの基本スタイル
+  - 他のファイルは base を前提に上書き／拡張します
+*/
+
+/* -------------------------
+   リセット
+   - すべての要素の余白・パディングをリセットし、
+     box-sizing を border-box に統一してレイアウトを安定させる
+   ------------------------- */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+
+/* -------------------------
+   ページ全体のフォントと背景
+   - 中央寄せレイアウト、背景グラデーションを指定
+   ------------------------- */
+body {
+    font-family: 'Arial', sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+
+/* -------------------------
+   メインコンテナ
+   - コンテンツを包む白いカード風のコンテナ
+   - shadow / border-radius / padding を設定
+   ------------------------- */
+.container {
+    background: white;
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    max-width: 600px;
+    width: 90%;
+}
+
+
+/* -------------------------
+   見出しスタイル
+   - 必要に応じて上位ファイルで上書き可能
+   ------------------------- */
+h1 {
+    text-align: center;
+    margin-bottom: 20px;
+    color: #333;
+}
+
+
+/* -------------------------
+   プレイヤー情報・スコア周り
+   - レイアウトと最小幅、背景色などの基本スタイル
+   ------------------------- */
+.info {
+    display: flex;
+    justify-content: space-around;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.player-info, .cpu-info {
+    text-align: center;
+    padding: 10px;
+    background: #f0f0f0;
+    border-radius: 5px;
+    min-width: 150px;
+}
+
+/* 各プレイヤー見出しの色調整 */
+.player-info h3 {
+    color: #000;
+    margin-bottom: 5px;
+}
+
+.cpu-info h3 {
+    color: #444;
+    margin-bottom: 5px;
+}
+
+/* スコア数値用スタイル */
+.score {
+    font-size: 24px;
+    font-weight: bold;
+    color: #333;
+}
+
+/* ターン表示（デフォルトは非表示、JS で表示切替） */
+.turn {
+    text-align: center;
+    margin-bottom: 15px;
+    display: none;
+}

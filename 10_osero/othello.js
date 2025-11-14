@@ -5,6 +5,21 @@
 // 必要に応じて prototype を介して補助的なメソッドが追加されます。
 
 class OthelloGame {
+    /**
+     * ゲームのタイミング・パラメータをクラス変数として定義
+     * 調整が必要な場合はここを修正すると全体に反映される
+     */
+    static TIMING = {
+        // CPU の手を考える前の遅延（ミリ秒）
+        CPU_THINK_DELAY: 100,
+        // CPU が石を置いてから反転アニメーションを開始するまでの遅延
+        CPU_FLIP_DELAY: 100,
+        // 1 枚の石を反転するのにかかる時間（ミリ秒）
+        FLIP_ANIMATION_INTERVAL: 100,
+        // ヒント表示の持続時間
+        HINT_DISPLAY_TIME: 1,
+    };
+
     constructor() {
         // board: 8x8 の 2 次元配列。各セルは 'black' | 'white' | null のいずれか。
         // currentPlayer: 現在の手番（'white'=プレイヤー, 'black'=CPU）
